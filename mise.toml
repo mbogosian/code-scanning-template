@@ -1,0 +1,10 @@
+[tools]
+pre-commit = "4.6.2"
+
+[tasks.setup]
+description = "Install the git hooks from .pre-commit-config.yaml"
+run = "pre-commit install"
+
+[tasks.check]
+description = "Run every hook against the whole tree"
+run = "pre-commit run --all-files"
