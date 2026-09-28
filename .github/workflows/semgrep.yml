@@ -1,0 +1,50 @@
+# This workflow runs semgrep scan with the public ruleset p/ci.
+# You do not need a Semgrep account.
+# https://semgrep.dev/docs/deployment/oss-deployment
+
+name: Semgrep
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    # Keep these branches a subset of the push branches above.
+    branches: [ "main" ]
+  schedule:
+    - cron: '33 9 * * 5'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  semgrep:
+    permissions:
+      contents: read # actions/checkout reads the repository
+      security-events: write # upload-sarif sends results to GitHub code scanning
+      actions: read # upload-sarif reads the workflow run. A private repository requires this permission.
+    name: Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Semgrep
+        run: python -m pip install 'semgrep==1.178.0'
+
+      - name: Scan
+        id: scan
+        run: semgrep scan --config p/ci --error --metrics=off --sarif --output semgrep.sarif
+        continue-on-error: true
+
+      - name: Upload Semgrep results
+        if: always()
+        uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4.38.1
+        with:
+          sarif_file: semgrep.sarif
+
+      - name: Fail when Semgrep reports a finding
+        if: steps.scan.outcome == 'failure'
+        run: exit 1

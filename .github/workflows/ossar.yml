@@ -1,0 +1,52 @@
+# OSSAR (Open Source Static Analysis Runner) runs Bandit, ESLint, and BinSkim.
+# The workflow uploads the results to GitHub code scanning.
+# Documentation: https://github.com/github/ossar-action
+name: OSSAR
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    # Keep these branches a subset of the push branches above.
+    branches: [ "main" ]
+  schedule:
+    - cron: '21 6 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  OSSAR-Scan:
+    # OSSAR runs on windows-latest and on Windows self-hosted runners.
+    # It does not run on ubuntu-latest or macos-latest.
+    permissions:
+      contents: read # actions/checkout reads the repository
+      security-events: write # upload-sarif sends results to GitHub code scanning
+      actions: read # upload-sarif reads the workflow run. A private repository requires this permission.
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+    # Microsoft Security DevOps needs dotnet 6.0 or later.
+    # https://aka.ms/msdo-nuget
+    # GitHub-hosted runners already have a compatible dotnet version. Skip this step there.
+    # On a self-hosted runner, install dotnet 6.0 or later:
+    # - name: Install .NET
+    #   uses: actions/setup-dotnet@v4
+    #   with:
+    #     dotnet-version: '6.0.x'
+
+    - name: Run OSSAR
+      uses: github/ossar-action@4e96c4f6e591eb4b991abfd459e40b136a317aea # v2.0.0
+      id: ossar
+
+    - name: Upload OSSAR results
+      uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4.38.1
+      with:
+        sarif_file: ${{ steps.ossar.outputs.sarifFile }}

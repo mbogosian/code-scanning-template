@@ -1,0 +1,56 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-vcs-permalinks
+      - id: check-yaml
+        args: [--unsafe]
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.3
+    hooks:
+      - id: codespell
+
+  - repo: https://github.com/gitleaks/gitleaks
+    # Keep this rev the same as the gitleaks version in .github/workflows/gitleaks.yml.
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/google/osv-scanner
+    rev: v2.6.0
+    hooks:
+      - id: osv-scanner
+        args: [scan, source, --format=vertical, --recursive, --verbosity=error, --allow-no-lockfiles, .]
+
+  - repo: https://github.com/semgrep/pre-commit
+    rev: v1.178.0
+    hooks:
+      - id: semgrep
+        args: [scan, --config, p/ci, --error, --metrics=off, --disable-version-check, --skip-unknown-extensions]
+
+  - repo: https://github.com/mxab/pre-commit-trivy
+    rev: 0.74.0
+    hooks:
+      - id: trivyfs-docker
+        entry: docker.io/aquasec/trivy:0.74.0 fs --cache-dir /src/.pre-commit-trivy-cache --exit-code 1
+        args: [.]
+      - id: trivyconfig-docker
+        entry: docker.io/aquasec/trivy:0.74.0 config --cache-dir /src/.pre-commit-trivy-cache --exit-code 1
+        args: [.]

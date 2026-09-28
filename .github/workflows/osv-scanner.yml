@@ -1,0 +1,48 @@
+# google/osv-scanner-action is not certified by GitHub.
+# A third party provides this action.
+# Its terms of service, privacy policy, and support documentation apply.
+#
+# Push and schedule runs scan the repository for known vulnerabilities.
+# A pull request run fails when the pull request introduces a new vulnerability.
+# Options, including ignored vulnerabilities: https://google.github.io/osv-scanner/github-action/
+
+name: OSV-Scanner
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  merge_group:
+    branches: [ "main" ]
+  schedule:
+    - cron: '28 20 * * 6'
+  push:
+    branches: [ "main" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  # The reusable workflow uploads results to GitHub code scanning.
+  security-events: write
+  # The reusable workflow reads the repository.
+  contents: read
+
+jobs:
+  scan-scheduled:
+    if: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc" # v2.6.0
+    with:
+      # Scan the repository recursively.
+      scan-args: |-
+        -r
+        ./
+  scan-pr:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc" # v2.6.0
+    with:
+      # Scan the repository recursively.
+      scan-args: |-
+        -r
+        ./

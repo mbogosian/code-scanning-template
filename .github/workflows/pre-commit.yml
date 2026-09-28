@@ -1,0 +1,25 @@
+name: pre-commit
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+      - run: pre-commit run --all-files
+        env:
+          # The gitleaks, osv-scanner, semgrep, trivyfs-docker, and trivyconfig-docker hooks have their own workflows.
+          # SKIP stops this workflow from running those hooks again.
+          SKIP: gitleaks,osv-scanner,semgrep,trivyfs-docker,trivyconfig-docker
+      - run: git diff --exit-code --
