@@ -34,13 +34,13 @@ repos:
       - id: gitleaks
 
   - repo: https://github.com/google/osv-scanner
-    rev: v2.6.0
+    rev: v2.7.0
     hooks:
       - id: osv-scanner
         args: [scan, source, --format=vertical, --recursive, --verbosity=error, --allow-no-lockfiles, .]
 
   - repo: https://github.com/semgrep/pre-commit
-    rev: v1.179.0
+    rev: v1.180.0
     hooks:
       - id: semgrep
         args: [scan, --config, p/ci, --error, --metrics=off, --disable-version-check, --skip-unknown-extensions]
